@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "BiointronOS_MCP": {
+      "url": "https://mcp-rusta-order-blgdfvompw.cn-shanghai.fcapp.run/mcp",
+      "headers": {
+        "Authorization": "Bearer <MCP_ACCESS_TOKEN>",
+        "START_MCP_TIMEOUT_MS": "60000",
+        "RUN_MCP_TIMEOUT_MS": "660000"
+      }
+    }
+  }
+}

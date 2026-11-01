@@ -1,0 +1,6 @@
+# Supplied Biointron MCP endpoint; keep credentials out of this file.
+# Merge this section into your config.toml; keep existing settings.
+# Supply BIOINTRON_MCP_TOKEN in the environment that starts Codex.
+[mcp_servers.biointron]
+url = "https://mcp-rusta-order-blgdfvompw.cn-shanghai.fcapp.run/mcp"
+bearer_token_env_var = "BIOINTRON_MCP_TOKEN"

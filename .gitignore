@@ -1,0 +1,14 @@
+.env
+.env.*
+!.env.example
+*.local
+__pycache__/
+*.py[cod]
+.venv/
+preview/
+.DS_Store
+Thumbs.db
+
+# Keep this public bundle's documentation when the parent project ignores docs.
+!/docs/
+!/.gitignore
