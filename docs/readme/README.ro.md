@@ -102,7 +102,7 @@ Pentru detalii despre configurare, consultă [ghidul de instalare](../../docs/in
 
 Alege unul dintre pachetele Skill incluse în [catalogul Skills](../../skills/README.md). Descarcă întregul folder, inclusiv `references/` și orice scripturi furnizate, și plasează-l în directorul Skills al agentului tău. Consultă [instalarea Skills](../../docs/installation.md#skills) pentru Codex și Claude Code.
 
-Ambele pachete sunt acum incluse în acest depozit: `skills/order_design/` pentru `order-design` și `skills/auto_html_report/` pentru `auto_html_report`. Sunt disponibile pentru descărcare; prezența lor nu confirmă validarea completă a fluxurilor operaționale.
+Ambele pachete sunt acum incluse în acest depozit: `skills/order_design/` pentru `order-design` și `skills/auto_html_report/` pentru `auto-html-report`. Sunt disponibile pentru descărcare; prezența lor nu confirmă validarea completă a fluxurilor operaționale.
 
 ### 3 · Începe cu o verificare fără modificări
 
@@ -118,26 +118,34 @@ Descoperirea instrumentelor este primul pas de verificare a conexiunii. Reușita
 
 | Instrument | Scop | Efect |
 | :--- | :--- | :--- |
+| `get_order_input_requirements` | Colectează implicit grupuri de întrebări independente; validează toate datele etapei înainte de scriere. Nu necesită JWT operațional. | Doar citire |
+| `search_order_antigens` | Caută produse și specificații reale după cuvinte-cheie și furnizează informații pentru continuarea paginării. | Doar citire |
 | `order_design_preflight` | Verifică eligibilitatea companiei și testele disponibile. | Doar citire |
 | `start_order_design` | Trimite fișierul XLSX furnizat și așteaptă confirmarea salvării proiectului. | Scrie date operaționale |
+| `get_order_design_result` | După alegerea clientului, citește HTML-ul efectiv al proiectului salvat pentru livrare, fără a modifica comanda. | Doar citire |
 | `add_order_to_cart` | Adaugă în coș un proiect a cărui salvare este confirmată. | Scrie date operaționale |
+| `end_order_workflow` | Cere clientului să elimine contextul local, fără revocarea semnăturii sau anularea comenzii. | Doar instrucțiune pentru client |
 | `get_order_cart` | Citește coșul de comenzi. | Doar citire |
 | `calculate_order_price` | Obține oferta de preț pentru comenzile selectate. | Doar citire |
-| `submit_verified_order` | Verifică oferta și trimite comenzile selectate. | Scrie date operaționale |
+| `submit_verified_order` | Verifică oferta și trimite comenzile selectate pentru confirmare de către personal. | Scrie date operaționale |
 | `get_report_results` | Obține rezultatele rapoartelor existente în format JSON. | Doar citire |
 
-Aceste șapte instrumente sunt înregistrate în implementarea MCP actuală. Funcționarea completă a fluxurilor operaționale rămâne de verificat. Consultă [semnăturile, starea și limitele](../../docs/tool-catalog.md).
+Implementarea locală include **11 instrumente**: 10 necesită JWT-ul clientului curent în `business_token`; `get_order_input_requirements` funcționează local fără JWT. Această actualizare nu a fost încă implementată în serviciu, iar fluxurile operaționale complete rămân de validat într-un mediu real. Consultă [semnăturile, starea și limitele](../../docs/tool-catalog.md).
 
 ## Skills
 
 | Skill | Scop | Starea publicării |
 | :--- | :--- | :--- |
-| [Proiectarea comenzilor · `order-design`](../../skills/order_design/SKILL.md) | Ghidează trimiterea proiectelor, adăugarea în coș, verificarea ofertelor de preț și plasarea comenzilor autorizate. | Inclus; disponibil pentru descărcare |
-| [Raportarea rezultatelor · `auto_html_report`](../../skills/auto_html_report/SKILL.md) | Generează rapoarte HTML autonome în mai multe limbi din rezultatele JSON furnizate de utilizator, cu tabele de sinteză, grafice și imaginile disponibile. | Inclus; disponibil pentru descărcare |
+| [Proiectarea comenzilor · `order-design`](../../skills/order_design/SKILL.md) | Explică pachetele, colectează informații în grupuri, ghidează selecția din catalog, oferă vizualizarea opțională a HTML-ului după salvarea proiectului, verifică coșul și ofertele și trimite comenzile pentru confirmare de către personal. | Inclus; disponibil pentru descărcare |
+| [Raportarea rezultatelor · `auto-html-report`](../../skills/auto_html_report/SKILL.md) | Generează rapoarte HTML autonome în mai multe limbi din rezultatele JSON furnizate de utilizator, cu tabele de sinteză, grafice și imaginile disponibile. | Inclus; disponibil pentru descărcare |
 
 MCP expune operațiuni; Skills descriu cum le folosește un agent în cadrul unei sarcini. Instalarea unui Skill nu acordă acces la servicii și nu înregistrează automat MCP. [Deschide catalogul →](../../skills/README.md)
 
-Skill-ul `auto_html_report` necesită rezultate JSON existente, furnizate de utilizator. Nu preia date de la serviciu; doar identificatorul comenzii nu este suficient.
+Comanda trimisă așteaptă confirmarea Biointron; trimiterea nu dovedește începerea producției sau finalizarea experimentelor.
+
+Dacă rezultatele JSON sunt deja furnizate, Skill-ul `auto-html-report` generează raportul local, fără credențiale sau conexiune MCP. În lipsa JSON-ului, o interogare autorizată poate utiliza numărul comenzii și JWT-ul clientului curent prin `get_report_results` pentru a obține datele înainte de generarea raportului. Numărul comenzii singur nu este suficient. Reutilizează un JWT valid; numai când trebuie obținut un JWT, reutilizează Biointron Account și App Key disponibile și solicită doar valorile lipsă.
+
+Instrucțiunile pachetului de rapoarte sunt în engleză, dar raportul respectă limba solicitată de client.
 
 <a id="beta"></a>
 

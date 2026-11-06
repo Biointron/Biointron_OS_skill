@@ -102,7 +102,7 @@ Mazeed tafseel ke liye [installation guide](../../docs/installation.md#mcp) dekh
 
 [Skills ki fehrist](../../skills/README.md) se shamil shuda Skill chunein. Us ka poora folder, `references/` aur saath diye gaye scripts samet, download karke apne agent ki Skill directory mein rakhein. Codex aur Claude Code ke liye [Skill ki installation](../../docs/installation.md#skills) dekhein.
 
-Dono packages ab is repository mein shamil hain: `order-design` ke liye `skills/order_design/` aur `auto_html_report` ke liye `skills/auto_html_report/`. Dono download kiye ja sakte hain; packages ki mojoodgi poore karobari amal ki tasdeeq nahin karti.
+Dono packages ab is repository mein shamil hain: `order-design` ke liye `skills/order_design/` aur `auto-html-report` ke liye `skills/auto_html_report/`. Dono download kiye ja sakte hain; packages ki mojoodgi poore karobari amal ki tasdeeq nahin karti.
 
 ### 3 · Sirf parhne wala taaruf aazmaayein
 
@@ -118,26 +118,34 @@ Tools ki dastiyabi maloom karna rabte ki pehli jaanch hai. Kisi karobari amal ki
 
 | Tool | Maqsad | Asar |
 | :--- | :--- | :--- |
+| `get_order_input_requirements` | Aam tor par azad sawalat ke batches jama karta hai; likhne se pehle us marhale ki tamam maloomat aik saath validate karta hai. Business JWT zaroori nahin. | Sirf parhna |
+| `search_order_antigens` | Keyword se asal products aur specifications dhoondta hai aur agle safhat hasil karne ki maloomat deta hai. | Sirf parhna |
 | `order_design_preflight` | Company ki ahliyat aur dastiyab tests check karta hai. | Sirf parhna |
 | `start_order_design` | Di hui XLSX file bhej kar design save hone ki tasdeeq ka intezar karta hai. | Karobari data likhta hai |
+| `get_order_design_result` | Customer ke intikhab ke baad saved design ka asal HTML sirf parh kar deta hai; order tabdeel nahin karta. | Sirf parhna |
 | `add_order_to_cart` | Save hone ki tasdeeq wale design ko cart mein dalta hai. | Karobari data likhta hai |
+| `end_order_workflow` | Client ko local context hataane ki hidayat dein; signature revoke ya order cancel nahin hota. | Sirf client ki hidayat |
 | `get_order_cart` | Order cart parhta hai. | Sirf parhna |
 | `calculate_order_price` | Chune gaye orders ki qeemat hasil karta hai. | Sirf parhna |
-| `submit_verified_order` | Qeemat ki tasdeeq ke baad chune gaye orders jama karta hai. | Karobari data likhta hai |
+| `submit_verified_order` | Qeemat ki peshkash jaanch kar muntakhib orders insani tasdeeq ke liye jama karta hai. | Karobari data likhta hai |
 | `get_report_results` | Maujood reports ke nataij JSON mein hasil karta hai. | Sirf parhna |
 
-Yeh saat tools maujooda MCP implementation mein registered hain. Poore karobari silsile ki tayyari ki tasdeeq abhi baqi hai. [Parameters, halat aur hudood](../../docs/tool-catalog.md) dekhein.
+Local implementation mein **11 tools** hain: 10 ko maujooda customer ka JWT `business_token` mein chahiye; `get_order_input_requirements` baghair JWT local taur par chalta hai. Yeh update abhi service par deploy nahin hua aur poore karobari amal ki haqeeqi mahaul mein tasdeeq baqi hai. [Parameters, halat aur hudood](../../docs/tool-catalog.md) dekhein.
 
 ## Skills
 
 | Skill | Maqsad | Release ki halat |
 | :--- | :--- | :--- |
-| [Order Design · `order-design`](../../skills/order_design/SKILL.md) | Design jama karwane, cart mein shamil karne, qeemat ki peshkash jaanchne aur ijazat shuda orders jama karwane mein rehnumai. | Shamil hai; download ke liye dastiyab |
-| [Nataij ki Report · `auto_html_report`](../../skills/auto_html_report/SKILL.md) | User ke diye hue maujood nataij ke JSON se mukhtalif zabanon mein mustaqil HTML reports banata hai, jin mein khulase ki tables, charts aur dastiyab tasaveer hoti hain. | Shamil hai; download ke liye dastiyab |
+| [Order Design · `order-design`](../../skills/order_design/SKILL.md) | Packages samjhata hai, maloomat batches mein jama karta hai, catalog se products chunwata hai, design save hone par ikhtiyari HTML dekhne ka mauqa deta hai, cart aur qeemat jaanchta hai aur orders insani tasdeeq ke liye jama karta hai. | Shamil hai; download ke liye dastiyab |
+| [Nataij ki Report · `auto-html-report`](../../skills/auto_html_report/SKILL.md) | User ke diye hue maujood nataij ke JSON se mukhtalif zabanon mein mustaqil HTML reports banata hai, jin mein khulase ki tables, charts aur dastiyab tasaveer hoti hain. | Shamil hai; download ke liye dastiyab |
 
 MCP operations faraham karta hai; Skills batati hain ke agent kisi kaam mein unhein kaise istemal kare. Skill install karne se service ki rasai nahin milti aur MCP khud-ba-khud register nahin hota. [Fehrist dekhein →](../../skills/README.md)
 
-`auto_html_report` Skill ko user ke diye hue maujood nataij ka JSON chahiye. Yeh service se data hasil nahin karta; sirf order number kaafi nahin hai.
+Jama shuda order Biointron ki tasdeeq ka muntazir hota hai; jama hona production shuru hone ya tajriba mukammal hone ka saboot nahin.
+
+Agar nataij ka JSON pehle se diya gaya ho, `auto-html-report` Skill baghair credentials ya MCP connection ke local report banata hai. JSON na ho to ijazat ke daire mein order number aur maujooda customer ka JWT de kar `get_report_results` se pehle nataij hasil kiye ja sakte hain, phir report banti hai. Sirf order number kaafi nahin. Valid JWT dobara istemal karein; JWT hasil karna zaroori ho tabhi maujood Biointron Account aur App Key reuse karein aur sirf kami wali maloomat poochein.
+
+Report package ki hidayaat English mein hain, lekin report customer ki darkhwast karda zaban mein banti hai.
 
 <a id="beta"></a>
 

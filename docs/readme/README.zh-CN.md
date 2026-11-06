@@ -100,7 +100,7 @@ Biointron OS 面向 AI Agent、模型与用户，提供连接百英服务的统�
 
 从 [Skills 目录](../../skills/README.md)选择 Skill，下载包含参考文件和配套脚本在内的完整文件夹，放入 AI 客户端的 Skill 目录。Codex 与 Claude Code 的位置见 [Skill 安装说明](../installation.md#skills)。
 
-两个 Skill 文件夹均已包含：`skills/order_design`（`order-design`）和 `skills/auto_html_report`（`auto_html_report`）。订单设计通过 MCP 服务执行；报告 Skill 根据已有结果 JSON 生成报告，不负责获取结果。
+两个 Skill 文件夹均已包含：`skills/order_design`（`order-design`）和 `skills/auto_html_report`（`auto-html-report`）。订单 Skill 引导套餐选择、资料收集、可选的设计 HTML 交付和授权下单；报告 Skill 可直接根据已有 JSON 生成多语言报告，无需凭据或 MCP。缺少 JSON 时，可按已确认的订单号和当前客户 JWT，通过 `get_report_results` 查询已获授权的结果，再生成报告。接入要求见 [Skills 目录](../../skills/README.md)。
 
 ### 3 · 从只读体验开始
 
@@ -116,24 +116,34 @@ Biointron OS 面向 AI Agent、模型与用户，提供连接百英服务的统�
 
 | 工具 | 用途 | 操作性质 |
 | :--- | :--- | :--- |
+| `get_order_input_requirements` | 默认分批收集资料，设计或购物车写入前统一校验；无需业务 JWT。 | 只读 |
+| `search_order_antigens` | 按关键词查询百英产品库，返回真实货号、规格及分页选项。 | 只读 |
 | `order_design_preflight` | 检查公司资格和可用检测项目。 | 只读 |
 | `start_order_design` | 提交客户 XLSX 并等待设计保存确认。 | 写入业务数据 |
+| `get_order_design_result` | 客户选择查看后读取并交付已保存设计的 HTML。 | 只读 |
 | `add_order_to_cart` | 将已确认保存的设计加入购物车。 | 写入业务数据 |
+| `end_order_workflow` | 指导客户端丢弃本地上下文，不撤销签名或取消订单。 | 仅客户端指令 |
 | `get_order_cart` | 查询订单购物车。 | 只读 |
 | `calculate_order_price` | 获取指定订单的报价。 | 只读 |
-| `submit_verified_order` | 核验报价后提交选定订单。 | 写入业务数据 |
+| `submit_verified_order` | 核验报价后提交选定订单，等待人工确认。 | 写入业务数据 |
 | `get_report_results` | 读取已有报告的 JSON 结果。 | 只读 |
 
-当前 MCP 实现已注册以上七个工具，完整业务链路仍待验证。查看[工具签名、接入状态与使用边界](../tool-catalog.md)。
+十个客户相关工具（含产品库查询、设计 HTML 读取及 `end_order_workflow`）需要当前客户的 JWT 作为 `business_token`；本地输入说明工具无需业务 JWT，MCP 入口认证不变。详见[工具参数](../tool-catalog.md)和[凭据说明](../api.md)。
+
+当前本地清单为 **11 个工具、5 个资源、2 个提示词**；本轮未部署，未执行真实产品查询或联调测试，完整业务链路仍待验证。查看[工具签名、接入状态与使用边界](../tool-catalog.md)。
+
+新单先介绍并选择套餐。选择产品库后，依据本地输入工具的 `catalog_auth` 复用有效 JWT，或补齐 **Biointron Account** 和 **App Key** 后兑换，无需加载完整执行提示词。再通过原生文本弹窗或 CLI 输入关键词（如 CD2），展示后台真实货号和规格供选择，支持翻页、无结果时换词；选中后复用 `cart_data`，不询问供应商或补链接。外部链接和手动资料仍在提交设计前认证。
 
 ## Skills
 
 | Skill | 用途 | 发布状态 |
 | :--- | :--- | :--- |
-| [订单设计 · `order-design`](../../skills/order_design/SKILL.md) | 引导设计提交、购物车与报价核查，以及授权范围内的下单。 | 已包含 |
-| [HTML 结果报告 · `auto_html_report`](../../skills/auto_html_report/SKILL.md) | 将已有结果 JSON 生成为独立的多语言 HTML 报告，包含汇总表、图表和可用图片。 | 已包含 |
+| [订单设计 · `order-design`](../../skills/order_design/SKILL.md) | 引导套餐及产品选择、分批收集资料、可选交付已保存的设计 HTML，核对购物车与报价后提交选定订单供人工确认。 | 已包含 |
+| [HTML 结果报告 · `auto-html-report`](../../skills/auto_html_report/SKILL.md) | 根据已有或授权查询所得的 JSON 生成独立的多语言 HTML 报告，包含完整汇总、样本对比图、SPR/BLI 动力学图和可用图片。 | 已包含 |
 
 MCP 提供可调用操作，Skills 说明如何按任务使用这些能力。安装 Skill 不等于获得服务权限，也不会自动注册 MCP。[查看完整目录 →](../../skills/README.md)
+
+提交订单后仍需百英人工确认，不代表已投产或实验完成。已保存的设计 HTML 与实验结果报告是两种不同交付物。
 
 <a id="beta"></a>
 

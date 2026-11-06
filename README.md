@@ -100,7 +100,7 @@ For clients that support the `mcpServers` configuration format, merge this examp
 
 Choose a Skill from the [Skills catalog](skills/README.md). Download its complete folder, including references and any scripts, and place it in your agent's Skill directory. See [Skill installation](docs/installation.md#skills) for Codex and Claude Code.
 
-Both Skill folders are included: `skills/order_design` (`order-design`) and `skills/auto_html_report` (`auto_html_report`). Order Design uses the MCP service; HTML Report works from supplied result JSON and does not retrieve results itself.
+Both Skill folders are included: `skills/order_design` (`order-design`) and `skills/auto_html_report` (`auto-html-report`). Order Design guides package selection, information collection, optional saved-design HTML delivery, and authorized ordering. HTML Report creates multilingual reports from supplied JSON without credentials or MCP; when JSON is missing, it can first retrieve authorized results through `get_report_results` using the confirmed order number and the current customer's JWT. See the [Skills catalog](skills/README.md) for access requirements.
 
 ### 3 · Try a read-only introduction
 
@@ -116,24 +116,34 @@ Tool discovery is the first connection check. A successful business operation re
 
 | Tool | Purpose | Effect |
 | :--- | :--- | :--- |
+| `get_order_input_requirements` | Collect information in batches by default; validate completed design/cart input before writes. No business JWT. | Read only |
+| `search_order_antigens` | Search our product library by keyword and return real product/specification choices with pagination. | Read only |
 | `order_design_preflight` | Check company eligibility and available test items. | Read only |
 | `start_order_design` | Submit the supplied XLSX and wait for confirmed design storage. | Writes business data |
+| `get_order_design_result` | Read and return the saved design HTML when the customer requests it. | Read-only |
 | `add_order_to_cart` | Add a confirmed saved design to the cart. | Writes business data |
+| `end_order_workflow` | Ask the client to discard local context; no signature revocation or order cancellation. | Client instruction only |
 | `get_order_cart` | Read the order cart. | Read only |
 | `calculate_order_price` | Get a quote for selected orders. | Read only |
-| `submit_verified_order` | Verify the quote and submit selected orders. | Writes business data |
+| `submit_verified_order` | Verify the quote and submit selected orders for human confirmation. | Writes business data |
 | `get_report_results` | Retrieve existing report results as JSON. | Read only |
 
-These seven tools are registered in the current MCP implementation. End-to-end business readiness remains to be verified. See [signatures, status and limits](docs/tool-catalog.md).
+The ten customer-related tools, including library search, saved-design HTML retrieval and `end_order_workflow`, require the current customer's JWT in `business_token`. The local input tool needs no business JWT; MCP connection authentication is unchanged. See the [tool inputs](docs/tool-catalog.md) and [credential handling](docs/api.md).
+
+The current local implementation provides **11 tools, 5 resources and 2 prompts**. This update has not been deployed; no live product query or integration test was run. End-to-end business readiness remains to be verified. See [signatures, status and limits](docs/tool-catalog.md).
+
+New orders start with package introductions and selection. Upon choosing our product library, reuse a valid JWT or obtain missing **Biointron Account** and **App Key** values using `catalog_auth` from the local input tool; no full execution prompt is needed for search. Ask for a keyword such as CD2 in a native text dialog or CLI, then show real catalog numbers/specifications for selection. Support pagination and another keyword when no matches exist; retain the selected `cart_data`, without requesting a supplier or missing product link. External-link/manual branches authenticate before design submission.
 
 ## Skills
 
 | Skill | Purpose | Release status |
 | :--- | :--- | :--- |
-| [Order Design · `order-design`](skills/order_design/SKILL.md) | Guide design submission, cart and quotation checks, and authorized order submission. | Included |
-| [HTML Report · `auto_html_report`](skills/auto_html_report/SKILL.md) | Turn supplied result JSON into standalone multilingual HTML reports with summary tables, charts and available images. | Included |
+| [Order Design · `order-design`](skills/order_design/SKILL.md) | Guide package and product selection, collect information in batches, optionally deliver saved-design HTML, and check the cart and quote before submitting selected orders for human confirmation. | Included |
+| [HTML Report · `auto-html-report`](skills/auto_html_report/SKILL.md) | Create standalone multilingual HTML reports from supplied or authorized retrieved JSON, with a complete Data Summary, comparison charts, SPR/BLI kinetic plots and available images. | Included |
 
 MCP exposes operations; Skills describe how an agent uses them within a task. Installing a Skill does not grant service access or automatically register MCP. [Browse the catalog →](skills/README.md)
+
+Order submission awaits Biointron's human confirmation; it does not establish production or experimental completion. A saved design HTML file and an experimental results report are separate deliverables.
 
 <a id="beta"></a>
 

@@ -102,7 +102,7 @@ Ayrıntılı ayarlar için [kurulum kılavuzuna](../../docs/installation.md#mcp)
 
 [Skills kataloğundan](../../skills/README.md) yayımlanmış bir Skill seçin. `references/`, sağlanan betikler ve başvurulan diğer dosyalar dâhil klasörün tamamını indirin ve ajanınızın Skill dizinine yerleştirin. Codex ve Claude Code için [Skill kurulumu](../../docs/installation.md#skills) bölümüne bakın.
 
-Her iki Skill paketi de bu depoda bulunur ve indirilebilir. `auto_html_report`, kullanıcının sağladığı mevcut sonuç JSON'unu girdi olarak kullanır. Hizmetten veri getirmez; yalnızca sipariş numarası rapor oluşturmak için yeterli değildir.
+Her iki Skill paketi depoda bulunur ve indirilebilir. `auto-html-report`, önceden sağlanan sonuç JSON'undan yerel olarak rapor oluşturur; bunun için kimlik bilgisi veya MCP bağlantısı gerekmez. JSON yoksa yetkilendirilen kapsam içinde doğrulanmış sipariş numarası ve mevcut müşterinin geçerli JWT'si ile önce `get_report_results` üzerinden sonuçlar alınabilir, ardından rapor oluşturulabilir. Sipariş numarası tek başına yeterli değildir. Biointron Account ve App Key yalnızca geçerli bir JWT yoksa kullanılır; mevcut bilgiler yeniden kullanılır ve yalnızca eksik olanlar sorulur. Skill talimatları İngilizcedir ancak raporlar farklı dillerde oluşturulmaya devam edebilir.
 
 ### 3 · Önce salt okunur bir tanıtım deneyin
 
@@ -118,22 +118,28 @@ Araç keşfi ilk bağlantı kontrolüdür. Bir iş işleminin başarıyla tamaml
 
 | Araç | Amaç | Etki |
 | :--- | :--- | :--- |
+| `get_order_input_requirements` | Varsayılan olarak bağımsız soruları gruplar hâlinde toplar; yazmadan önce aşamanın tüm girdilerini `mode="validate"` ile birlikte doğrular. İş API'si JWT'si gerekmez. | Salt okunur |
+| `search_order_antigens` | Ürün kataloğunda anahtar kelimeyle arama yapar; gerçek ürünleri ve varyantları, sonraki sayfaları yükleme bilgileriyle döndürür. | Salt okunur |
 | `order_design_preflight` | Şirket uygunluğunu ve kullanılabilir testleri kontrol eder. | Salt okunur |
 | `start_order_design` | Sağlanan XLSX dosyasını gönderir ve tasarımın kaydedildiğinin onayını bekler. | İş verilerine yazar |
+| `get_order_design_result` | Müşteri görüntülemeyi seçtiğinde kaydedilmiş tasarımın gerçek HTML'sini salt okunur olarak alıp sunar. | Salt okunur |
 | `add_order_to_cart` | Kaydı onaylanmış tasarımı sepete ekler. | İş verilerine yazar |
+| `end_order_workflow` | İstemciye yerel bağlamı silmesini söyleyin; imza iptal edilmez ve sipariş iptal olmaz. | Yalnızca istemci talimatı |
 | `get_order_cart` | Sipariş sepetini okur. | Salt okunur |
 | `calculate_order_price` | Seçilen siparişler için fiyat teklifi alır. | Salt okunur |
-| `submit_verified_order` | Fiyat teklifini doğrular ve seçilen siparişleri gönderir. | İş verilerine yazar |
+| `submit_verified_order` | Teklifi yeniden doğrular ve seçili siparişleri insan onayına sunar. | İş verilerine yazar |
 | `get_report_results` | Mevcut rapor sonuçlarını JSON olarak alır. | Salt okunur |
 
-Bu yedi araç mevcut MCP uygulamasında kayıtlıdır. İş akışının uçtan uca kullanıma hazır olup olmadığı henüz doğrulanmalıdır. [İmzalar, durum ve sınırlar](../../docs/tool-catalog.md) bölümüne bakın.
+Mevcut MCP uygulamasında 11 araç kayıtlıdır: 10 araç mevcut müşterinin iş API'si JWT'sini gerektirir; `get_order_input_requirements` bu JWT olmadan yerel olarak çalışır. Dağıtımın ve iş akışlarının uçtan uca çalışmasının doğrulanması hâlâ gereklidir. [İmzalar, durum ve sınırlar](../../docs/tool-catalog.md) bölümüne bakın.
 
 ## Skills
 
 | Skill | Amaç | Yayın durumu |
 | :--- | :--- | :--- |
-| [Sipariş Tasarımı · `order-design`](../../skills/order_design/SKILL.md) | Sipariş taleplerine, tasarım gönderimine ve sipariş gönderimine rehberlik eder. | Depoda mevcut · İndirilebilir |
-| [Sonuç Raporu · `auto_html_report`](../../skills/auto_html_report/SKILL.md) | Kullanıcının sağladığı mevcut sonuç JSON'undan özet tablo, grafikler ve mevcut görseller içeren bağımsız, çok dilli HTML raporları oluşturur. | Depoda mevcut · İndirilebilir |
+| [Sipariş Tasarımı · `order-design`](../../skills/order_design/SKILL.md) | Paketleri açıklar, bilgileri gruplar hâlinde toplar, katalogdan ürün seçimini yönlendirir, kayıttan sonra isteğe bağlı tasarım HTML'sini gösterir; sepet, teklif ve insan onayına gönderim adımlarını yürütür. | Depoda mevcut · İndirilebilir |
+| [Sonuç Raporu · `auto-html-report`](../../skills/auto_html_report/SKILL.md) | Sağlanan veya yetkili bir sorguyla alınan sonuç JSON'undan özet tablo, grafikler ve mevcut görseller içeren bağımsız, çok dilli HTML raporları oluşturur. | Depoda mevcut · İndirilebilir |
+
+Siparişin gönderilmesi, üretimin başladığı veya deneyin tamamlandığı anlamına gelmez. Üretim yalnızca Biointron'un onayından sonra başlar.
 
 MCP işlemleri kullanıma sunar; Skills, ajanın bunları bir görev içinde nasıl kullanacağını açıklar. Bir Skill kurmak hizmet erişimi sağlamaz ve MCP'yi otomatik olarak kaydetmez. [Kataloğa göz atın →](../../skills/README.md)
 

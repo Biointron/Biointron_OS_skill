@@ -102,7 +102,7 @@ Biointron OS 為 AI Agent、模型及使用者提供百英服務的接入介面�
 
 從 [Skills 目錄](../../skills/README.md)選擇本倉庫已包含的 Skill。下載完整資料夾，保留 `references/` 與隨附腳本，放入 Agent 的 Skill 目錄。Codex 與 Claude Code 的設定方式見 [Skill 安裝說明](../../docs/installation.md#skills)。
 
-兩個套件現已包含在本倉庫：`order-design` 位於 `skills/order_design/`，`auto_html_report` 位於 `skills/auto_html_report/`，均可下載。套件已提供不代表完整業務流程已通過驗證。
+兩個套件現已包含在本倉庫：`order-design` 位於 `skills/order_design/`，`auto-html-report` 位於 `skills/auto_html_report/`，均可下載。套件已提供不代表完整業務流程已通過驗證。
 
 ### 3 · 先進行唯讀體驗
 
@@ -118,26 +118,36 @@ Biointron OS 為 AI Agent、模型及使用者提供百英服務的接入介面�
 
 | 工具 | 用途 | 操作性質 |
 | :--- | :--- | :--- |
+| `get_order_input_requirements` | 預設分批收集獨立問題；實際寫入前統一校驗本階段全部資料，不需業務 JWT。 | 唯讀 |
+| `search_order_antigens` | 依關鍵字查詢真實產品與規格，並提供載入後續頁面的資訊。 | 唯讀 |
 | `order_design_preflight` | 檢查公司資格和可用檢測項目。 | 唯讀 |
 | `start_order_design` | 提交客戶 XLSX 並等待設計儲存確認。 | 寫入業務資料 |
+| `get_order_design_result` | 客戶選擇查看後，唯讀取得已儲存設計的實際 HTML 供交付，不變更訂單。 | 唯讀 |
 | `add_order_to_cart` | 將已確認儲存的設計加入購物車。 | 寫入業務資料 |
+| `end_order_workflow` | 指導用戶端捨棄本機上下文，不撤銷簽章或取消訂單。 | 僅用戶端指令 |
 | `get_order_cart` | 查詢訂單購物車。 | 唯讀 |
 | `calculate_order_price` | 取得指定訂單的報價。 | 唯讀 |
-| `submit_verified_order` | 核驗報價後提交選定訂單。 | 寫入業務資料 |
+| `submit_verified_order` | 核驗報價後提交選定訂單，供人工確認。 | 寫入業務資料 |
 | `get_report_results` | 以 JSON 取得既有報告結果。 | 唯讀 |
 
-目前的 MCP 實作已註冊這七個工具。端到端業務流程是否就緒仍待驗證。請參閱[工具簽章、狀態與限制](../../docs/tool-catalog.md)。
+目前本機清單為 **11 個工具、5 個資源、2 個提示詞**。其中 10 個工具需傳入目前客戶的 JWT 作為 `business_token`；`get_order_input_requirements` 在本機執行，不需業務 JWT。本次更新尚未部署，未執行真實產品查詢或整合測試，端到端業務流程仍待驗證。請參閱[工具簽章、狀態與限制](../../docs/tool-catalog.md)。
+
+新訂單先介紹並選擇套餐。選擇產品庫後，依本機輸入工具的 `catalog_auth` 重用有效 JWT，或補齊 **Biointron Account** 和 **App Key** 後兌換，無需載入完整執行提示詞。再透過原生文字對話框或 CLI 輸入關鍵字（如 CD2），顯示後端真實貨號與規格供選擇，支援分頁、無結果時更換關鍵字；選取後重用 `cart_data`，不詢問供應商或補填連結。外部連結與手動資料仍在提交設計前驗證帳戶。
 
 ## Skills
 
 | Skill | 用途 | 發布狀態 |
 | :--- | :--- | :--- |
-| [訂單設計 · `order-design`](../../skills/order_design/SKILL.md) | 引導設計提交、加入購物車、報價核查及授權範圍內的訂單提交。 | 已包含，可下載 |
-| [結果報告 · `auto_html_report`](../../skills/auto_html_report/SKILL.md) | 將使用者提供的既有結果 JSON 製作為獨立的多語言 HTML 報告，包含彙總表、圖表及可用圖片。 | 已包含，可下載 |
+| [訂單設計 · `order-design`](../../skills/order_design/SKILL.md) | 介紹套餐、分批收集資料、選擇產品庫產品，設計儲存後可選擇查看 HTML，接續購物車、報價及提交選定訂單供人工確認。 | 已包含，可下載 |
+| [結果報告 · `auto-html-report`](../../skills/auto_html_report/SKILL.md) | 將使用者提供的既有結果 JSON 製作為獨立的多語言 HTML 報告，包含彙總表、圖表及可用圖片。 | 已包含，可下載 |
 
 MCP 提供可呼叫的操作；Skills 說明 Agent 如何在任務中使用這些操作。安裝 Skill 不會授予服務存取權限，也不會自動註冊 MCP。[瀏覽目錄 →](../../skills/README.md)
 
-`auto_html_report` Skill 需要使用者提供既有結果 JSON，不負責從服務取得資料；只有訂單編號不足以產生報告。
+提交後仍須等待百英人工確認；提交不代表已開始生產或已完成實驗。
+
+已有結果 JSON 時，`auto-html-report` Skill 可在本機產生報告，不需憑據或 MCP 連線。沒有 JSON 時，可在授權範圍內以訂單編號及目前客戶的 JWT，透過 `get_report_results` 先取得結果再產生報告。只有訂單編號不足；已有有效 JWT 就重用，僅在缺少有效 JWT 時使用 Biointron Account 與 App Key 兌換，並只補問缺少的資料。
+
+報告規則包以英文撰寫，不限制客戶報告語言；報告按客戶要求的語言製作。
 
 <a id="beta"></a>
 

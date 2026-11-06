@@ -102,7 +102,7 @@ Weitere Hinweise finden Sie in der [Installationsanleitung](../../docs/installat
 
 Wählen Sie einen veröffentlichten Skill aus dem [Skill-Katalog](../../skills/README.md). Laden Sie den vollständigen Ordner einschließlich `references/`, mitgelieferter Skripte und weiterer referenzierter Dateien herunter und legen Sie ihn im Skill-Verzeichnis Ihres Agenten ab. Die Schritte für Codex und Claude Code finden Sie unter [Skills installieren](../../docs/installation.md#skills).
 
-Beide Skill-Pakete sind in diesem Repository enthalten und können heruntergeladen werden. `auto_html_report` verarbeitet vorhandene Ergebnisdaten im JSON-Format, die der Nutzer bereitstellt. Der Skill ruft keine Daten von einem Dienst ab; eine Auftragsnummer allein reicht zur Berichtserstellung nicht aus.
+Beide Skill-Pakete sind enthalten und können heruntergeladen werden. `auto-html-report` erstellt Berichte lokal aus bereits bereitgestellten Ergebnis-JSONs; dafür sind weder Zugangsdaten noch eine MCP-Verbindung erforderlich. Fehlt das JSON, können mit entsprechender Autorisierung zuerst die bestätigte Auftragsnummer und das gültige JWT des aktuellen Kunden an `get_report_results` übergeben und anschließend die Ergebnisse als Bericht aufbereitet werden. Eine Auftragsnummer allein genügt nicht. Biointron Account und App Key werden nur benötigt, wenn kein gültiges JWT vorliegt; vorhandene Angaben werden wiederverwendet und nur fehlende erfragt. Die Skill-Anweisungen sind auf Englisch, die Berichte können weiterhin mehrsprachig erstellt werden.
 
 ### 3 · Mit einer schreibgeschützten Einführung beginnen
 
@@ -118,22 +118,28 @@ Die Werkzeugerkennung ist die erste Verbindungsprüfung. Eine erfolgreiche Gesch
 
 | Werkzeug | Zweck | Auswirkung |
 | :--- | :--- | :--- |
+| `get_order_input_requirements` | Standardmäßig unabhängige Fragen in Gruppen sammeln; vor einem Schreibvorgang alle Eingaben der Phase gemeinsam mit `mode="validate"` prüfen. Kein Geschäfts-JWT erforderlich. | Nur lesend |
+| `search_order_antigens` | Den Produktkatalog nach Stichwort durchsuchen; tatsächliche Produkte und Varianten sowie Angaben für weitere Ergebnisseiten liefern. | Nur lesend |
 | `order_design_preflight` | Unternehmensberechtigung und verfügbare Testpositionen prüfen. | Nur lesend |
 | `start_order_design` | Die bereitgestellte XLSX-Datei senden und die bestätigte Speicherung des Entwurfs abwarten. | Schreibt Geschäftsdaten |
+| `get_order_design_result` | Nach Auswahl durch den Kunden das tatsächliche HTML des gespeicherten Entwurfs schreibgeschützt abrufen und bereitstellen. | Nur lesend |
 | `add_order_to_cart` | Einen bestätigt gespeicherten Entwurf zum Warenkorb hinzufügen. | Schreibt Geschäftsdaten |
+| `end_order_workflow` | Client zum Verwerfen des lokalen Kontexts auffordern; keine Signatur widerrufen oder Bestellung stornieren. | Nur Client-Anweisung |
 | `get_order_cart` | Den Bestellwarenkorb lesen. | Nur lesend |
 | `calculate_order_price` | Ein Angebot für ausgewählte Bestellungen abrufen. | Nur lesend |
-| `submit_verified_order` | Das Angebot prüfen und ausgewählte Bestellungen einreichen. | Schreibt Geschäftsdaten |
+| `submit_verified_order` | Angebot erneut prüfen und ausgewählte Bestellungen zur Bestätigung durch einen Menschen einreichen. | Schreibt Geschäftsdaten |
 | `get_report_results` | Vorhandene Berichtsergebnisse als JSON abrufen. | Nur lesend |
 
-Diese sieben Werkzeuge sind in der aktuellen MCP-Implementierung registriert. Ob die Geschäftsabläufe durchgängig einsatzbereit sind, muss noch geprüft werden. Siehe [Signaturen, Status und Einschränkungen](../../docs/tool-catalog.md).
+Die aktuelle MCP-Implementierung registriert 11 Werkzeuge: 10 benötigen das Geschäfts-JWT des aktuellen Kunden; `get_order_input_requirements` arbeitet lokal ohne dieses JWT. Die Bereitstellung und die durchgängige Funktionsfähigkeit der Geschäftsabläufe müssen weiterhin geprüft werden. Siehe [Signaturen, Status und Einschränkungen](../../docs/tool-catalog.md).
 
 ## Skills
 
 | Skill | Zweck | Veröffentlichungsstatus |
 | :--- | :--- | :--- |
-| [Auftragsdesign · `order-design`](../../skills/order_design/SKILL.md) | Durch Bestellanfragen, das Einreichen von Entwurfsdaten und die Bestellabgabe führen. | Enthalten · Zum Download verfügbar |
-| [Ergebnisbericht · `auto_html_report`](../../skills/auto_html_report/SKILL.md) | Erstellt eigenständige mehrsprachige HTML-Berichte aus vom Nutzer bereitgestellten Ergebnisdaten im JSON-Format, mit Übersichtstabelle, Diagrammen und verfügbaren Bildern. | Enthalten · Zum Download verfügbar |
+| [Auftragsdesign · `order-design`](../../skills/order_design/SKILL.md) | Pakete erläutern, Angaben in Gruppen sammeln, die Produktauswahl begleiten, nach dem Speichern optional das Entwurfs-HTML anzeigen sowie Warenkorb, Angebot und Einreichung zur menschlichen Bestätigung bearbeiten. | Enthalten · Zum Download verfügbar |
+| [Ergebnisbericht · `auto-html-report`](../../skills/auto_html_report/SKILL.md) | Aus vorhandenen oder autorisiert abgerufenen Ergebnis-JSONs eigenständige mehrsprachige HTML-Berichte mit Übersichtstabelle, Diagrammen und verfügbaren Bildern erstellen. | Enthalten · Zum Download verfügbar |
+
+Das Einreichen einer Bestellung bedeutet weder den Beginn der Produktion noch den Abschluss eines Experiments. Die Produktion beginnt erst nach der Bestätigung durch Biointron.
 
 MCP stellt Operationen bereit; Skills beschreiben, wie ein Agent diese innerhalb einer Aufgabe verwendet. Die Installation eines Skills gewährt keinen Dienstzugang und registriert MCP nicht automatisch. [Katalog ansehen →](../../skills/README.md)
 

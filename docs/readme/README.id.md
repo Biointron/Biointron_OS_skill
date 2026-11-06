@@ -102,7 +102,7 @@ Lihat [panduan instalasi](../../docs/installation.md#mcp) untuk detail lebih lan
 
 Pilih salah satu Skill yang disertakan dalam [katalog Skills](../../skills/README.md). Unduh seluruh foldernya, termasuk `references/` dan skrip yang disertakan, lalu letakkan di direktori Skill agen Anda. Lihat [instalasi Skill](../../docs/installation.md#skills) untuk Codex dan Claude Code.
 
-Kedua paket kini tersedia di repositori ini: `skills/order_design/` untuk `order-design` dan `skills/auto_html_report/` untuk `auto_html_report`. Keduanya dapat diunduh; keberadaan paket tidak membuktikan bahwa seluruh alur bisnis telah divalidasi.
+Kedua paket kini tersedia di repositori ini: `skills/order_design/` untuk `order-design` dan `skills/auto_html_report/` untuk `auto-html-report`. Keduanya dapat diunduh; keberadaan paket tidak membuktikan bahwa seluruh alur bisnis telah divalidasi.
 
 ### 3 · Coba pengenalan hanya-baca
 
@@ -118,26 +118,34 @@ Penemuan alat merupakan pemeriksaan koneksi pertama. Keberhasilan suatu operasi 
 
 | Alat | Tujuan | Dampak |
 | :--- | :--- | :--- |
+| `get_order_input_requirements` | Secara default mengumpulkan pertanyaan independen dalam kelompok; memvalidasi seluruh data tahap sebelum penulisan. Tidak memerlukan JWT bisnis. | Hanya baca |
+| `search_order_antigens` | Mencari produk dan spesifikasi nyata berdasarkan kata kunci, dengan informasi untuk melanjutkan halaman hasil. | Hanya baca |
 | `order_design_preflight` | Memeriksa kelayakan perusahaan dan pengujian yang tersedia. | Hanya baca |
 | `start_order_design` | Mengirim XLSX yang diberikan dan menunggu konfirmasi penyimpanan desain. | Menulis data bisnis |
+| `get_order_design_result` | Setelah dipilih pelanggan, membaca HTML desain tersimpan yang sebenarnya untuk diserahkan tanpa mengubah pesanan. | Hanya baca |
 | `add_order_to_cart` | Menambahkan desain yang telah dikonfirmasi tersimpan ke keranjang. | Menulis data bisnis |
+| `end_order_workflow` | Minta klien membuang konteks lokal tanpa mencabut tanda tangan atau membatalkan pesanan. | Hanya instruksi klien |
 | `get_order_cart` | Membaca keranjang pesanan. | Hanya baca |
 | `calculate_order_price` | Mendapatkan penawaran harga untuk pesanan yang dipilih. | Hanya baca |
-| `submit_verified_order` | Memverifikasi harga dan mengirim pesanan yang dipilih. | Menulis data bisnis |
+| `submit_verified_order` | Memeriksa penawaran harga dan mengirim pesanan terpilih untuk konfirmasi oleh petugas. | Menulis data bisnis |
 | `get_report_results` | Mengambil hasil laporan yang sudah ada dalam format JSON. | Hanya baca |
 
-Ketujuh alat ini terdaftar dalam implementasi MCP saat ini. Kesiapan alur bisnis dari awal hingga akhir masih perlu diverifikasi. Lihat [parameter, status, dan batasan](../../docs/tool-catalog.md).
+Implementasi lokal mencantumkan **11 alat**: 10 memerlukan JWT pelanggan saat ini dalam `business_token`; `get_order_input_requirements` bekerja secara lokal tanpa JWT. Pembaruan ini belum diterapkan ke layanan, dan alur bisnis menyeluruh belum divalidasi di lingkungan nyata. Lihat [parameter, status, dan batasan](../../docs/tool-catalog.md).
 
 ## Skills
 
 | Skill | Tujuan | Status rilis |
 | :--- | :--- | :--- |
-| [Desain Pesanan · `order-design`](../../skills/order_design/SKILL.md) | Memandu pengajuan desain, penambahan ke keranjang, pemeriksaan penawaran harga, dan pengiriman pesanan yang telah diizinkan. | Disertakan; dapat diunduh |
-| [Laporan Hasil · `auto_html_report`](../../skills/auto_html_report/SKILL.md) | Membuat laporan HTML mandiri dalam berbagai bahasa dari JSON hasil yang diberikan pengguna, dengan tabel ringkasan, grafik, dan gambar yang tersedia. | Disertakan; dapat diunduh |
+| [Desain Pesanan · `order-design`](../../skills/order_design/SKILL.md) | Menjelaskan paket, mengumpulkan data dalam kelompok, memilih produk katalog, menawarkan tampilan HTML setelah desain disimpan, memeriksa keranjang dan harga, serta mengirim pesanan untuk konfirmasi petugas. | Disertakan; dapat diunduh |
+| [Laporan Hasil · `auto-html-report`](../../skills/auto_html_report/SKILL.md) | Membuat laporan HTML mandiri dalam berbagai bahasa dari JSON hasil yang diberikan pengguna, dengan tabel ringkasan, grafik, dan gambar yang tersedia. | Disertakan; dapat diunduh |
 
 MCP menyediakan operasi; Skills menjelaskan cara agen menggunakannya dalam suatu tugas. Menginstal Skill tidak memberikan akses layanan atau mendaftarkan MCP secara otomatis. [Jelajahi katalog →](../../skills/README.md)
 
-Skill `auto_html_report` memerlukan JSON hasil yang sudah diberikan pengguna. Skill ini tidak mengambil data dari layanan; nomor pesanan saja tidak cukup.
+Pesanan yang dikirim menunggu konfirmasi Biointron; pengiriman tidak membuktikan produksi telah dimulai atau eksperimen telah selesai.
+
+Jika JSON hasil sudah diberikan, Skill `auto-html-report` membuat laporan secara lokal tanpa kredensial atau koneksi MCP. Jika JSON belum ada, kueri yang diizinkan dapat memakai nomor pesanan dan JWT pelanggan saat ini melalui `get_report_results` untuk mengambil hasil sebelum membuat laporan. Nomor pesanan saja tidak cukup. Gunakan kembali JWT yang valid; hanya jika JWT perlu diperoleh, gunakan Biointron Account dan App Key yang sudah ada lalu tanyakan nilai yang masih kurang.
+
+Petunjuk paket laporan ditulis dalam bahasa Inggris, tetapi laporan mengikuti bahasa yang diminta pelanggan.
 
 <a id="beta"></a>
 

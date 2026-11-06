@@ -1,5 +1,5 @@
 ---
-name: auto_html_report
+name: auto-html-report
 description: Create customer-ready multilingual HTML reports from RushData result JSON, with a complete Data Summary, sample comparison charts, SPR/BLI kinetic plots, compact assay tables, and available experimental images. Use to generate a report or revise its layout, language, or charts.
 ---
 
@@ -9,13 +9,35 @@ Turn supplied result JSON into a complete, accurate, readable HTML report. Deliv
 
 Read `references/result-schema.md` before mapping fields. That file defines supported input structures, exact keys, units, and record-matching rules.
 
+Package descriptions do not prove that an assay was performed. Report only actual supplied results, and keep design reports distinct from experimental data reports. Submission acceptance alone does not establish production, completion, or result availability. Generating a report from supplied JSON does not require another skill or service connection.
+
 ## Inputs and output
 
 - Required: result JSON as a file or supplied content. Accept a business payload or a supported response wrapper. Schema descriptions and empty structural examples are not experimental results.
 - Optional: report language, order scope, title, branding, layout preferences, output directory, and additional experimental images with sample/assay associations.
-- Start from the supplied data. An order identifier alone is insufficient; obtaining results through a service is outside this skill.
+- Start from the supplied data. An order identifier alone is insufficient. If result JSON is absent and the user authorizes a report query, follow the optional preparation below; otherwise request the result JSON.
 - Produce one HTML file per order and requested language. Default to English. Use `RushData_<order>_<language>.html`, or `RushData_report_<language>.html` when no order identifier is available. Sanitize filenames and overwrite only when an update is requested.
 - Check both image content in the JSON and additional image inputs. If no additional image information has been supplied, mention once that the user can provide image files or paths and their sample/assay associations. Do not repeat an answered question or block the report while waiting for optional images.
+
+## Optional preparation: retrieve authorized results
+
+Skip this preparation when usable result JSON is already supplied; report generation then needs no credentials or MCP connection.
+
+For an authorized query, use the confirmed order number and the current customer's JWT with `get_report_results(query={"orderNo": "<order-number>"}, business_token=<JWT>, language=<interaction-language>)`. The current tool supports `zh` or `en` for interaction messages; this is separate from the requested report language. `business_token` remains a JWT, not an App Key; MCP does not perform a credential exchange or accept a `username` argument.
+
+If the user labels the account `account` and the App Key `apkey`, map them to the exchange JSON fields `username` and `appkey`. Complete the exchange and take its verified `result.token` before querying. Never pass an account, App Key, concatenation or Base64 conversion as `business_token`, including after a 401; do not ask the customer to guess a token format.
+
+If a valid JWT is available, reuse it. Otherwise reuse any supplied account or App Key and request only missing values, using **Biointron Account** and then **App Key** as separate ordinary text fields. Do not invent a website menu or ask ordinary customers to find a JWT.
+
+Use already available server connection metadata or `client_side_exchange.url` from the credential response. If connection metadata is missing and the `order_design` prompt is available, read it with `phase="execute"`, `detail="compact"`, and the supported interaction language, solely to obtain `connection_config`. Its default start phase opens an order workflow and must not be used for report preparation. Reading this metadata does not authorize ordering or following unrelated order instructions. Standalone clients use their existing connection configuration; do not hardcode a service address in this skill or ask the customer for one. Missing configuration requires service maintenance.
+
+Through an available HTTP/script tool, send POST to the configured exchange address with JSON `{"appkey": "<customer-appkey>", "username": "<bound-account>"}`. Do not follow credential-bearing redirects or guess an environment. The exchange needs neither the MCP access token nor a business-token header. Require HTTP 2xx, numeric `code=200`, `success=true`, and a nonempty JWT in `result.token`; pass it to the MCP tool. On failure, stop the failed preparation step without automatic retries, exposing credentials, or guessing another environment. If HTTP/script execution is unavailable, explain the missing capability. Supplied result JSON bypasses credentials entirely.
+
+For missing account/order information, actually use an available native question tool and ask exactly one field at a time, including text fields. Prefer native free-text input; omit `options` when the tool supports text-only questions. If the client requires choices and offers custom text, collect the real value there. Labels such as "Enter a value" or "Skip" are interface actions, never actual account/order values. Do not invent values as choices or treat an action label as a completed answer. Use only a tool exposed and permitted in the current client/mode. Wait for the user's submitted value before continuing; invalid input stays on the current field. Do not batch credential questions or use a multi-field paste template.
+
+The exact input labels are **Biointron Account** and **App Key**. App Key uses ordinary text input and requires no masking or hidden-input channel; do not prefill a value or repeat it afterward. If native questions are unavailable, ask one field through text or an interactive terminal and wait for the reply. MCP cannot force every client to open a popup. Resume the authorized query once ready; missing information is a pending interaction, not a completed task.
+
+Keep App Key and account limited to the exchange request, and credentials in invocation memory. Do not save, log, or echo credentials in ordinary replies, files, or generated reports; client tool history may retain arguments. Keep requests and results paired with the same customer and authorized order. Check the returned HTTP and business status and actual result content before report generation; an error or “no data” response is not report data. This preparation performs no order design, cart insertion, or submission.
 
 ## 1. Validate and organize the data
 
@@ -137,7 +159,9 @@ Use short coverage counts next to assay headings. Conditions belong in subheadin
 
 ## 8. Apply the requested report language
 
-The skill instructions remain English; report content follows the requested language. Support English, Simplified Chinese, Traditional Chinese, Japanese, Korean, and other explicitly requested languages. Default to separate files for multiple languages, with identical data and section coverage.
+Every file distributed in this skill package must be English, including filenames, instructions, metadata, examples, code comments, and any future scripts or templates. Do not hide non-English text in escaped strings. Keep fixed website addresses, internal service URIs, personal paths, real credentials, and customer-specific examples out of the public package. Use descriptive English placeholders for examples and runtime configuration for service addresses.
+
+This package-language rule does not restrict customer report languages or alter supplied data. Report content follows the requested language. Support English, Simplified Chinese, Traditional Chinese, Japanese, Korean, and other explicitly requested languages. Default to separate files for multiple languages, with identical data and section coverage.
 
 Translate headings, labels, notes, captions, and controls consistently. Preserve sample names, identifiers, target names, numeric values, units, and supplied official customer names. Translate assessments faithfully; retain their original wording when meaning is uncertain. Do not edit language inside original experimental images.
 

@@ -100,7 +100,7 @@ Biointron の担当者からサービス用アクセストークンを取得し�
 
 [Skills 一覧](../../skills/README.md)から Skill を選び、参照ファイルと付属スクリプトを含むフォルダー全体をダウンロードして、エージェントの Skill ディレクトリに配置します。Codex と Claude Code の設定先は [Skill のインストール](../installation.md#skills)に記載しています。
 
-`skills/order_design`（`order-design`）と `skills/auto_html_report`（`auto_html_report`）の両フォルダーを同梱しています。注文設計は MCP サービスを利用します。レポート Skill は提供済みの結果 JSON からレポートを作成し、結果の取得は行いません。
+`skills/order_design`（`order-design`）と `skills/auto_html_report`（`auto-html-report`）の両フォルダーを同梱しています。注文 Skill はパッケージ選択、情報収集、保存済み設計 HTML の任意提供、許可された注文操作をガイドします。レポート Skill は提供済み JSON から認証情報や MCP 接続なしで多言語レポートを作成できます。JSON がない場合は、確認済み注文番号と現在の顧客の JWT を使い、許可された範囲で `get_report_results` から結果を取得してから生成します。接続要件は [Skills 一覧](../../skills/README.md)をご覧ください。
 
 ### 3 · 読み取り専用の確認から始める
 
@@ -116,24 +116,30 @@ Biointron の担当者からサービス用アクセストークンを取得し�
 
 | ツール | 用途 | 操作 |
 | :--- | :--- | :--- |
+| `get_order_input_requirements` | 既定では情報をまとめて収集し、設計・カートへの書き込み前に一括検証。業務 JWT は不要。 | 読み取り専用 |
+| `search_order_antigens` | キーワードで製品ライブラリーを検索し、実際の品番・仕様と続きのページを取得。 | 読み取り専用 |
 | `order_design_preflight` | 会社の利用資格と検査項目を確認。 | 読み取り専用 |
 | `start_order_design` | 提供された XLSX を送信し、設計の保存確認を待つ。 | 書き込み |
+| `get_order_design_result` | 顧客の希望に応じて、保存済みの設計 HTML を読み取り提供。 | 読み取り専用 |
 | `add_order_to_cart` | 保存確認済みの設計をカートに追加。 | 書き込み |
+| `end_order_workflow` | クライアントにローカル文脈の破棄を指示。署名の失効や注文取消は行いません。 | クライアントへの指示のみ |
 | `get_order_cart` | 注文カートを照会。 | 読み取り専用 |
 | `calculate_order_price` | 選択した注文の見積もりを取得。 | 読み取り専用 |
-| `submit_verified_order` | 見積もりを確認して選択した注文を提出。 | 書き込み |
+| `submit_verified_order` | 見積もりを確認し、担当者の確認を受けるために選択した注文を提出。 | 書き込み |
 | `get_report_results` | 既存のレポート結果を JSON で取得。 | 読み取り専用 |
 
-現行 MCP 実装には、この 7 つのツールが登録されています。業務フロー全体の検証は未完了です。[引数・状態・制限を確認](../tool-catalog.md)。
+現行のローカル実装には **11 個のツール、5 個のリソース、2 個のプロンプト**があります。顧客に関連する 10 個のツールには現在の顧客の JWT を `business_token` として渡します。ローカル入力ツールには業務 JWT は不要です。この更新のデプロイと業務フロー全体の検証は未完了です。[引数・状態・制限を確認](../tool-catalog.md)。
 
 ## Skills
 
 | Skill | 用途 | 公開状況 |
 | :--- | :--- | :--- |
-| [注文設計 · `order-design`](../../skills/order_design/SKILL.md) | 設計データの提出、カートと見積もりの確認、許可された注文の送信をガイド。 | 同梱済み |
-| [HTML レポート · `auto_html_report`](../../skills/auto_html_report/SKILL.md) | 提供された結果 JSON から、集計表・グラフ・利用可能な画像を含む単独ファイルの多言語 HTML レポートを作成。 | 同梱済み |
+| [注文設計 · `order-design`](../../skills/order_design/SKILL.md) | パッケージ・製品選択、情報の一括収集、保存済み設計 HTML の任意提供、カート・見積もり確認、担当者確認用の注文提出をガイド。 | 同梱済み |
+| [HTML レポート · `auto-html-report`](../../skills/auto_html_report/SKILL.md) | 提供済みまたは許可を得て取得した JSON から、完全な集計表、比較グラフ、SPR/BLI 動態図、利用可能な画像を含む多言語 HTML レポートを作成。 | 同梱済み |
 
 MCP は呼び出せる操作を提供し、Skills はタスクでの使い方を説明します。Skill のインストールだけでは、サービスの権限取得や MCP 登録は行われません。[一覧を見る →](../../skills/README.md)
+
+注文の提出後も Biointron の担当者による確認が必要で、製造開始や実験完了を意味しません。保存済みの設計 HTML と実験結果レポートは別の成果物です。
 
 <a id="beta"></a>
 

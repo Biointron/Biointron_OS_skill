@@ -102,7 +102,7 @@ Xem [hướng dẫn cài đặt](../../docs/installation.md#mcp) để biết th
 
 Chọn một Skill đã phát hành từ [danh mục Skills](../../skills/README.md). Tải toàn bộ thư mục, bao gồm `references/`, các tập lệnh đi kèm và những tệp được tham chiếu khác, rồi đặt vào thư mục Skill của tác nhân. Xem [cách cài đặt Skill](../../docs/installation.md#skills) cho Codex và Claude Code.
 
-Cả hai gói Skill đã có trong kho lưu trữ này và có thể tải xuống. `auto_html_report` nhận JSON kết quả đã có do người dùng cung cấp. Skill này không lấy dữ liệu từ dịch vụ; chỉ có mã đơn hàng là chưa đủ để tạo báo cáo.
+Cả hai gói Skill đã có trong kho lưu trữ và có thể tải xuống. `auto-html-report` tạo báo cáo cục bộ từ JSON kết quả đã được cung cấp, không cần thông tin xác thực hay kết nối MCP. Nếu chưa có JSON, trong phạm vi được cho phép, có thể dùng mã đơn hàng đã xác nhận và JWT hợp lệ của khách hàng hiện tại để lấy kết quả qua `get_report_results` trước, rồi tạo báo cáo. Chỉ có mã đơn hàng là chưa đủ. Biointron Account và App Key chỉ được dùng khi chưa có JWT hợp lệ; tái sử dụng thông tin đã cung cấp và chỉ hỏi phần còn thiếu. Hướng dẫn Skill bằng tiếng Anh nhưng báo cáo vẫn có thể được tạo bằng nhiều ngôn ngữ.
 
 ### 3 · Bắt đầu bằng trải nghiệm chỉ đọc
 
@@ -118,22 +118,28 @@ Khám phá công cụ là bước kiểm tra kết nối đầu tiên. Một tha
 
 | Công cụ | Mục đích | Tác động |
 | :--- | :--- | :--- |
+| `get_order_input_requirements` | Mặc định thu thập các câu hỏi độc lập theo từng nhóm; trước khi ghi, kiểm tra toàn bộ dữ liệu của bước bằng `mode="validate"`. Không cần JWT nghiệp vụ. | Chỉ đọc |
+| `search_order_antigens` | Tìm trong danh mục theo từ khóa, trả về sản phẩm và quy cách thực tế cùng thông tin để tải các trang tiếp theo. | Chỉ đọc |
 | `order_design_preflight` | Kiểm tra điều kiện của công ty và các phép thử hiện có. | Chỉ đọc |
 | `start_order_design` | Gửi tệp XLSX được cung cấp và chờ xác nhận lưu thiết kế. | Ghi dữ liệu nghiệp vụ |
+| `get_order_design_result` | Khi khách hàng chọn xem, lấy và cung cấp HTML thực tế của thiết kế đã lưu bằng thao tác chỉ đọc. | Chỉ đọc |
 | `add_order_to_cart` | Thêm thiết kế đã được xác nhận lưu vào giỏ hàng. | Ghi dữ liệu nghiệp vụ |
+| `end_order_workflow` | Yêu cầu ứng dụng khách bỏ ngữ cảnh cục bộ, không thu hồi chữ ký hay hủy đơn hàng. | Chỉ hướng dẫn ứng dụng khách |
 | `get_order_cart` | Đọc giỏ hàng đơn hàng. | Chỉ đọc |
 | `calculate_order_price` | Lấy báo giá cho các đơn hàng đã chọn. | Chỉ đọc |
-| `submit_verified_order` | Xác minh báo giá rồi gửi các đơn hàng đã chọn. | Ghi dữ liệu nghiệp vụ |
+| `submit_verified_order` | Kiểm tra lại báo giá và gửi các đơn hàng đã chọn để được người phụ trách xác nhận. | Ghi dữ liệu nghiệp vụ |
 | `get_report_results` | Lấy kết quả báo cáo đã có dưới dạng JSON. | Chỉ đọc |
 
-Bảy công cụ này đã được đăng ký trong bản triển khai MCP hiện tại. Mức độ sẵn sàng của toàn bộ quy trình nghiệp vụ vẫn cần được xác minh. Xem [chữ ký hàm, trạng thái và giới hạn](../../docs/tool-catalog.md).
+Bản triển khai MCP hiện tại đăng ký 11 công cụ: 10 công cụ cần JWT nghiệp vụ của khách hàng hiện tại; `get_order_input_requirements` chạy cục bộ mà không cần JWT này. Việc triển khai và khả năng hoạt động của toàn bộ quy trình nghiệp vụ vẫn cần được xác minh. Xem [chữ ký hàm, trạng thái và giới hạn](../../docs/tool-catalog.md).
 
 ## Skills
 
 | Skill | Mục đích | Trạng thái phát hành |
 | :--- | :--- | :--- |
-| [Thiết kế đơn hàng · `order-design`](../../skills/order_design/SKILL.md) | Hướng dẫn xử lý yêu cầu đặt hàng, gửi thiết kế và gửi đơn hàng. | Đã có · Có thể tải xuống |
-| [Báo cáo kết quả · `auto_html_report`](../../skills/auto_html_report/SKILL.md) | Tạo báo cáo HTML độc lập, đa ngôn ngữ từ JSON kết quả đã có do người dùng cung cấp, bao gồm bảng tổng hợp, biểu đồ và hình ảnh sẵn có. | Đã có · Có thể tải xuống |
+| [Thiết kế đơn hàng · `order-design`](../../skills/order_design/SKILL.md) | Giải thích gói dịch vụ, thu thập thông tin theo nhóm, hướng dẫn chọn sản phẩm trong danh mục, cho phép xem HTML sau khi lưu thiết kế và xử lý giỏ hàng, báo giá, gửi đơn để người phụ trách xác nhận. | Đã có · Có thể tải xuống |
+| [Báo cáo kết quả · `auto-html-report`](../../skills/auto_html_report/SKILL.md) | Tạo báo cáo HTML độc lập, đa ngôn ngữ với bảng tổng hợp, biểu đồ và hình ảnh sẵn có từ JSON kết quả được cung cấp hoặc được lấy bằng truy vấn đã được cho phép. | Đã có · Có thể tải xuống |
+
+Gửi đơn không có nghĩa là đã bắt đầu sản xuất hoặc hoàn thành thí nghiệm. Việc sản xuất chỉ bắt đầu sau khi Biointron xác nhận.
 
 MCP cung cấp các thao tác; Skills mô tả cách tác nhân sử dụng chúng trong một tác vụ. Cài đặt Skill không cấp quyền truy cập dịch vụ và không tự động đăng ký MCP. [Xem danh mục →](../../skills/README.md)
 

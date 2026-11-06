@@ -102,7 +102,7 @@ Per maggiori dettagli, consulta la [guida all'installazione](../../docs/installa
 
 Scegli una delle Skills incluse nel [catalogo delle Skills](../../skills/README.md). Scarica la cartella completa, compresi `references/` e gli eventuali script forniti, e inseriscila nella directory delle Skills del tuo agente. Per Codex e Claude Code, consulta [Installazione delle Skills](../../docs/installation.md#skills).
 
-Entrambi i pacchetti sono ora inclusi nel repository: `skills/order_design/` per `order-design` e `skills/auto_html_report/` per `auto_html_report`. Sono disponibili per il download; la loro presenza non dimostra la validazione completa dei processi operativi.
+Entrambi i pacchetti sono ora inclusi nel repository: `skills/order_design/` per `order-design` e `skills/auto_html_report/` per `auto-html-report`. Sono disponibili per il download; la loro presenza non dimostra la validazione completa dei processi operativi.
 
 ### 3 · Prova un'introduzione in sola lettura
 
@@ -118,26 +118,34 @@ L'individuazione degli strumenti è il primo controllo della connessione. Per co
 
 | Strumento | Scopo | Effetto |
 | :--- | :--- | :--- |
+| `get_order_input_requirements` | Raccoglie per impostazione predefinita gruppi di domande indipendenti; convalida tutti i dati della fase prima della scrittura. Non richiede un JWT aziendale. | Sola lettura |
+| `search_order_antigens` | Cerca prodotti e specifiche reali per parola chiave e restituisce le informazioni per continuare la paginazione. | Sola lettura |
 | `order_design_preflight` | Verifica l'idoneità dell'azienda e i test disponibili. | Sola lettura |
 | `start_order_design` | Invia il file XLSX fornito e attende la conferma del salvataggio del progetto. | Scrive dati operativi |
+| `get_order_design_result` | Dopo la scelta del cliente, legge l'HTML effettivo del progetto salvato per consegnarlo senza modificare l'ordine. | Sola lettura |
 | `add_order_to_cart` | Aggiunge al carrello un progetto il cui salvataggio è confermato. | Scrive dati operativi |
+| `end_order_workflow` | Chiedere al client di eliminare il contesto locale, senza revocare la firma né annullare l’ordine. | Solo istruzione al client |
 | `get_order_cart` | Consulta il carrello degli ordini. | Sola lettura |
 | `calculate_order_price` | Ottiene un preventivo per gli ordini selezionati. | Sola lettura |
-| `submit_verified_order` | Verifica il preventivo e inoltra gli ordini selezionati. | Scrive dati operativi |
+| `submit_verified_order` | Verifica il preventivo e inoltra gli ordini selezionati per la conferma da parte del personale. | Scrive dati operativi |
 | `get_report_results` | Recupera risultati di report esistenti in formato JSON. | Sola lettura |
 
-Questi sette strumenti sono registrati nell'attuale implementazione MCP. La disponibilità operativa dell'intero flusso resta da verificare. Consulta [firme, stato e limiti](../../docs/tool-catalog.md).
+L'implementazione locale elenca **11 strumenti**: 10 richiedono il JWT del cliente corrente in `business_token`; `get_order_input_requirements` funziona localmente senza JWT. Questo aggiornamento non è ancora stato distribuito e l'intero flusso operativo resta da validare in un ambiente reale. Consulta [firme, stato e limiti](../../docs/tool-catalog.md).
 
 ## Skills
 
 | Skill | Scopo | Stato del rilascio |
 | :--- | :--- | :--- |
-| [Progettazione degli ordini · `order-design`](../../skills/order_design/SKILL.md) | Guida l'invio dei progetti, l'aggiunta al carrello, la verifica dei preventivi e l'inoltro degli ordini autorizzati. | Incluso; disponibile per il download |
-| [Report dei risultati · `auto_html_report`](../../skills/auto_html_report/SKILL.md) | Genera report HTML autonomi in più lingue dai risultati JSON forniti dall'utente, con tabelle riepilogative, grafici e immagini disponibili. | Incluso; disponibile per il download |
+| [Progettazione degli ordini · `order-design`](../../skills/order_design/SKILL.md) | Spiega i pacchetti, raccoglie i dati in gruppi, guida la selezione dal catalogo, propone la visualizzazione dell'HTML dopo il salvataggio del progetto, verifica carrello e preventivi e inoltra gli ordini per la conferma del personale. | Incluso; disponibile per il download |
+| [Report dei risultati · `auto-html-report`](../../skills/auto_html_report/SKILL.md) | Genera report HTML autonomi in più lingue dai risultati JSON forniti dall'utente, con tabelle riepilogative, grafici e immagini disponibili. | Incluso; disponibile per il download |
 
 MCP espone le operazioni; le Skills descrivono come un agente le usa per un compito. Installare una Skill non concede l'accesso al servizio né registra automaticamente MCP. [Esplora il catalogo →](../../skills/README.md)
 
-La Skill `auto_html_report` richiede risultati JSON già forniti dall'utente. Non recupera dati dal servizio; il solo identificativo dell'ordine non è sufficiente.
+L'ordine inoltrato attende la conferma di Biointron; l'invio non dimostra l'avvio della produzione o il completamento degli esperimenti.
+
+Con risultati JSON già forniti, la Skill `auto-html-report` genera il report localmente, senza credenziali né connessione MCP. Se manca il JSON, una richiesta autorizzata può usare il numero d'ordine e il JWT del cliente corrente con `get_report_results` per ottenere i risultati e poi generare il report. Il solo numero d'ordine non basta. Riutilizza un JWT valido; solo quando occorre ottenerlo, riutilizza Biointron Account e App Key già disponibili e chiedi soltanto i valori mancanti.
+
+Le istruzioni del pacchetto di report sono in inglese, ma il report segue la lingua richiesta dal cliente.
 
 <a id="beta"></a>
 
